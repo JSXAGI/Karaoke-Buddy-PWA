@@ -1,0 +1,1499 @@
+<!-- File: index.html -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  >
+  <meta
+    name="description"
+    content="カラオケ好きのためのPWA。曲の練習、セットリスト作成、採点記録、オフライン利用に対応。"
+  >
+  <meta name="theme-color" content="#111827">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon_192.png">
+  <link rel="apple-touch-icon" href="icon_192.png">
+  <title>Karaoke Buddy PWA</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg-soft: #111827;
+      --panel: #1f2937;
+      --panel-2: #243244;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --line: #334155;
+      --accent: #22c55e;
+      --accent-2: #38bdf8;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background:
+        radial-gradient(circle at top right, rgba(56, 189, 248, 0.18), transparent 20%),
+        radial-gradient(circle at top left, rgba(34, 197, 94, 0.15), transparent 24%),
+        var(--bg);
+      color: var(--text);
+      font-family:
+        "Inter",
+        "Hiragino Sans",
+        "Yu Gothic UI",
+        "Meiryo",
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        sans-serif;
+      min-height: 100%;
+    }
+
+    body {
+      padding: 16px;
+    }
+
+    .app {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.18), rgba(34, 197, 94, 0.12));
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.8rem, 3vw, 2.8rem);
+      line-height: 1.15;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.45);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 999px;
+      padding: 8px 12px;
+      color: var(--text);
+      font-size: 0.92rem;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 16px;
+    }
+
+    .panel {
+      background: rgba(17, 24, 39, 0.92);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .panel-header h2 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    .panel-body {
+      padding: 16px 18px 18px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.92rem;
+      color: #dbeafe;
+      margin-bottom: 6px;
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+      font: inherit;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--text);
+      outline: none;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--accent-2);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 92px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #16a34a);
+      color: #052e16;
+      font-weight: 700;
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, var(--accent-2), #0ea5e9);
+      color: #082f49;
+      font-weight: 700;
+    }
+
+    .btn-ghost {
+      background: #1e293b;
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.12);
+      color: #fecaca;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .metric {
+      background: linear-gradient(180deg, rgba(36, 50, 68, 0.95), rgba(31, 41, 55, 0.95));
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+    }
+
+    .metric .value {
+      font-weight: 800;
+      font-size: 1.5rem;
+    }
+
+    .song-list,
+    .history-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .song-card,
+    .history-card {
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      background: rgba(36, 50, 68, 0.72);
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .song-top,
+    .history-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .song-title,
+    .history-title {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 800;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.84rem;
+      color: #e2e8f0;
+    }
+
+    .song-actions,
+    .history-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .section-note {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.6;
+      margin: 0 0 12px;
+    }
+
+    .empty {
+      padding: 18px;
+      border: 1px dashed rgba(148, 163, 184, 0.2);
+      border-radius: 16px;
+      color: var(--muted);
+      text-align: center;
+      background: rgba(15, 23, 42, 0.35);
+    }
+
+    .footer-note {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+      padding: 8px 0 24px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .small {
+      font-size: 0.84rem;
+      color: var(--muted);
+    }
+
+    .score-good {
+      color: #86efac;
+    }
+
+    .score-mid {
+      color: #fde68a;
+    }
+
+    .score-low {
+      color: #fca5a5;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 12px;
+      }
+
+      .grid-2,
+      .grid-3,
+      .summary {
+        grid-template-columns: 1fr;
+      }
+
+      .panel-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="hero">
+      <h1>🎤 Karaoke Buddy PWA</h1>
+      <p>
+        歌いたい曲を管理し、採点結果を蓄積し、次に歌うセットリストを作れる、
+        カラオケ好き向けのオフライン対応PWAです。
+      </p>
+      <div class="status-row">
+        <div class="badge" id="onlineStatus">通信状態: 確認中...</div>
+        <div class="badge" id="installStatus">インストール: 利用可能なら表示</div>
+        <div class="badge">保存先: 端末内ローカル保存</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>ダッシュボード</h2>
+      </div>
+      <div class="panel-body">
+        <div class="summary">
+          <div class="metric">
+            <div class="label">登録曲数</div>
+            <div class="value" id="metricSongs">0</div>
+          </div>
+          <div class="metric">
+            <div class="label">平均点</div>
+            <div class="value" id="metricAvg">0.0</div>
+          </div>
+          <div class="metric">
+            <div class="label">最高点</div>
+            <div class="value" id="metricBest">0</div>
+          </div>
+          <div class="metric">
+            <div class="label">お気に入り</div>
+            <div class="value" id="metricFav">0</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="layout">
+      <section class="panel">
+        <div class="panel-header">
+          <h2>曲を登録</h2>
+        </div>
+        <div class="panel-body">
+          <p class="section-note">
+            曲名、アーティスト、キー、難易度、メモを登録できます。採点履歴はあとから個別に追加できます。
+          </p>
+
+          <form id="songForm">
+            <div class="grid-2">
+              <div>
+                <label for="title">曲名</label>
+                <input id="title" name="title" type="text" maxlength="80" required>
+              </div>
+              <div>
+                <label for="artist">アーティスト</label>
+                <input id="artist" name="artist" type="text" maxlength="80" required>
+              </div>
+            </div>
+
+            <div class="grid-3" style="margin-top: 12px;">
+              <div>
+                <label for="key">キー調整</label>
+                <select id="key" name="key">
+                  <option value="0">原曲キー</option>
+                  <option value="+1">+1</option>
+                  <option value="+2">+2</option>
+                  <option value="+3">+3</option>
+                  <option value="-1">-1</option>
+                  <option value="-2">-2</option>
+                  <option value="-3">-3</option>
+                </select>
+              </div>
+              <div>
+                <label for="difficulty">難易度</label>
+                <select id="difficulty" name="difficulty">
+                  <option value="やさしい">やさしい</option>
+                  <option value="ふつう" selected>ふつう</option>
+                  <option value="むずかしい">むずかしい</option>
+                </select>
+              </div>
+              <div>
+                <label for="favorite">お気に入り</label>
+                <select id="favorite" name="favorite">
+                  <option value="false" selected>通常</option>
+                  <option value="true">お気に入り</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="margin-top: 12px;">
+              <label for="memo">メモ</label>
+              <textarea id="memo" name="memo" maxlength="300" placeholder="高音サビ注意、最初は抑えて歌う、など"></textarea>
+            </div>
+
+            <div class="actions">
+              <button type="submit" class="btn-primary" id="submitSongButton">曲を追加</button>
+              <button type="button" class="btn-ghost" id="resetSongButton">入力をリセット</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>セットリスト生成</h2>
+        </div>
+        <div class="panel-body">
+          <p class="section-note">
+            登録曲からランダムに、またはお気に入り優先で次に歌う候補を生成します。
+          </p>
+
+          <div class="grid-2">
+            <div>
+              <label for="setlistCount">曲数</label>
+              <select id="setlistCount">
+                <option value="3">3曲</option>
+                <option value="5" selected>5曲</option>
+                <option value="7">7曲</option>
+              </select>
+            </div>
+            <div>
+              <label for="setlistMode">生成モード</label>
+              <select id="setlistMode">
+                <option value="random" selected>完全ランダム</option>
+                <option value="favorite">お気に入り優先</option>
+                <option value="score">低得点曲を優先練習</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button type="button" class="btn-secondary" id="generateSetlistButton">セットリストを作る</button>
+            <button type="button" class="btn-ghost" id="clearSetlistButton">クリア</button>
+          </div>
+
+          <div id="setlistArea" class="song-list"></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="layout">
+      <section class="panel">
+        <div class="panel-header">
+          <h2>登録曲一覧</h2>
+          <input
+            id="searchInput"
+            type="search"
+            placeholder="曲名・アーティストで検索"
+            aria-label="曲検索"
+            style="max-width: 280px;"
+          >
+        </div>
+        <div class="panel-body">
+          <div class="actions" style="margin-top: 0; margin-bottom: 12px;">
+            <button type="button" class="btn-ghost" id="sortNewest">新しい順</button>
+            <button type="button" class="btn-ghost" id="sortScore">平均点順</button>
+            <button type="button" class="btn-ghost" id="sortFavorite">お気に入り優先</button>
+          </div>
+          <div id="songList" class="song-list"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>採点履歴</h2>
+        </div>
+        <div class="panel-body">
+          <p class="section-note">
+            各曲の「スコア追加」から履歴を登録してください。履歴は新しい順で表示されます。
+          </p>
+
+          <form id="scoreForm">
+            <div class="grid-2">
+              <div>
+                <label for="scoreSongId">対象曲</label>
+                <select id="scoreSongId" required></select>
+              </div>
+              <div>
+                <label for="scoreValue">点数</label>
+                <input
+                  id="scoreValue"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  placeholder="例: 89.5"
+                  required
+                >
+              </div>
+            </div>
+
+            <div style="margin-top: 12px;">
+              <label for="scoreComment">ひとことメモ</label>
+              <input
+                id="scoreComment"
+                type="text"
+                maxlength="120"
+                placeholder="ビブラート安定、音程後半で崩れた など"
+              >
+            </div>
+
+            <div class="actions">
+              <button type="submit" class="btn-primary">スコアを保存</button>
+              <button type="button" class="btn-ghost" id="resetScoreButton">クリア</button>
+            </div>
+          </form>
+
+          <div id="historyList" class="history-list"></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>データ管理</h2>
+      </div>
+      <div class="panel-body">
+        <p class="section-note">
+          データのバックアップ用にJSONとして書き出しできます。別端末ではJSONを読み込んで復元できます。
+        </p>
+        <div class="actions">
+          <button type="button" class="btn-secondary" id="exportButton">JSONを書き出す</button>
+          <button type="button" class="btn-ghost" id="importTriggerButton">JSONを読み込む</button>
+          <button type="button" class="btn-danger" id="clearAllButton">全データ削除</button>
+          <input
+            id="importInput"
+            type="file"
+            accept="application/json"
+            class="hidden"
+          >
+        </div>
+        <p class="small" id="dataMessage"></p>
+      </div>
+    </section>
+
+    <div class="footer-note">
+      オフラインでも利用可能。ホーム画面に追加するとアプリのように使えます。
+    </div>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "karaoke-buddy-pwa-v1";
+    const appState = {
+      songs: [],
+      scores: [],
+      setlist: [],
+      sortMode: "newest",
+      search: ""
+    };
+
+    let deferredPrompt = null;
+    let editingSongId = null;
+
+    const els = {
+      onlineStatus: document.getElementById("onlineStatus"),
+      installStatus: document.getElementById("installStatus"),
+      metricSongs: document.getElementById("metricSongs"),
+      metricAvg: document.getElementById("metricAvg"),
+      metricBest: document.getElementById("metricBest"),
+      metricFav: document.getElementById("metricFav"),
+      songForm: document.getElementById("songForm"),
+      submitSongButton: document.getElementById("submitSongButton"),
+      resetSongButton: document.getElementById("resetSongButton"),
+      title: document.getElementById("title"),
+      artist: document.getElementById("artist"),
+      key: document.getElementById("key"),
+      difficulty: document.getElementById("difficulty"),
+      favorite: document.getElementById("favorite"),
+      memo: document.getElementById("memo"),
+      setlistCount: document.getElementById("setlistCount"),
+      setlistMode: document.getElementById("setlistMode"),
+      generateSetlistButton: document.getElementById("generateSetlistButton"),
+      clearSetlistButton: document.getElementById("clearSetlistButton"),
+      setlistArea: document.getElementById("setlistArea"),
+      songList: document.getElementById("songList"),
+      searchInput: document.getElementById("searchInput"),
+      sortNewest: document.getElementById("sortNewest"),
+      sortScore: document.getElementById("sortScore"),
+      sortFavorite: document.getElementById("sortFavorite"),
+      scoreForm: document.getElementById("scoreForm"),
+      scoreSongId: document.getElementById("scoreSongId"),
+      scoreValue: document.getElementById("scoreValue"),
+      scoreComment: document.getElementById("scoreComment"),
+      resetScoreButton: document.getElementById("resetScoreButton"),
+      historyList: document.getElementById("historyList"),
+      exportButton: document.getElementById("exportButton"),
+      importTriggerButton: document.getElementById("importTriggerButton"),
+      importInput: document.getElementById("importInput"),
+      clearAllButton: document.getElementById("clearAllButton"),
+      dataMessage: document.getElementById("dataMessage")
+    };
+
+    function createId(prefix) {
+      return prefix + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          seedSampleData();
+          return;
+        }
+
+        const parsed = JSON.parse(raw);
+
+        appState.songs = Array.isArray(parsed.songs) ? parsed.songs : [];
+        appState.scores = Array.isArray(parsed.scores) ? parsed.scores : [];
+        appState.setlist = Array.isArray(parsed.setlist) ? parsed.setlist : [];
+      } catch (error) {
+        console.error("データ読み込み失敗:", error);
+        seedSampleData();
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          songs: appState.songs,
+          scores: appState.scores,
+          setlist: appState.setlist
+        })
+      );
+    }
+
+    function seedSampleData() {
+      const song1 = {
+        id: createId("song"),
+        title: "残響",
+        artist: "サンプルバンド",
+        key: "0",
+        difficulty: "ふつう",
+        favorite: true,
+        memo: "サビ前は力みすぎない",
+        createdAt: new Date().toISOString()
+      };
+      const song2 = {
+        id: createId("song"),
+        title: "夜空ドライブ",
+        artist: "サンプルシンガー",
+        key: "-1",
+        difficulty: "むずかしい",
+        favorite: false,
+        memo: "Aメロは優しく入る",
+        createdAt: new Date(Date.now() - 1000 * 60).toISOString()
+      };
+
+      const score1 = {
+        id: createId("score"),
+        songId: song1.id,
+        value: 91.2,
+        comment: "音程安定",
+        createdAt: new Date().toISOString()
+      };
+      const score2 = {
+        id: createId("score"),
+        songId: song2.id,
+        value: 86.4,
+        comment: "高音で失速",
+        createdAt: new Date().toISOString()
+      };
+
+      appState.songs = [song1, song2];
+      appState.scores = [score1, score2];
+      appState.setlist = [];
+      saveState();
+    }
+
+    function getScoresForSong(songId) {
+      return appState.scores.filter((score) => score.songId === songId);
+    }
+
+    function getSongAverage(songId) {
+      const scores = getScoresForSong(songId);
+      if (scores.length === 0) {
+        return null;
+      }
+
+      const total = scores.reduce((sum, item) => sum + Number(item.value), 0);
+      return total / scores.length;
+    }
+
+    function getSongBest(songId) {
+      const scores = getScoresForSong(songId);
+      if (scores.length === 0) {
+        return null;
+      }
+
+      return Math.max(...scores.map((item) => Number(item.value)));
+    }
+
+    function formatScore(score) {
+      return Number(score).toFixed(1);
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function scoreClass(score) {
+      const num = Number(score);
+      if (num >= 90) {
+        return "score-good";
+      }
+      if (num >= 80) {
+        return "score-mid";
+      }
+      return "score-low";
+    }
+
+    function updateDashboard() {
+      const songCount = appState.songs.length;
+      const favoriteCount = appState.songs.filter((song) => song.favorite).length;
+      const allScores = appState.scores.map((score) => Number(score.value));
+      const avg = allScores.length
+        ? allScores.reduce((sum, item) => sum + item, 0) / allScores.length
+        : 0;
+      const best = allScores.length ? Math.max(...allScores) : 0;
+
+      els.metricSongs.textContent = String(songCount);
+      els.metricAvg.textContent = formatScore(avg);
+      els.metricBest.textContent = best ? formatScore(best) : "0.0";
+      els.metricFav.textContent = String(favoriteCount);
+    }
+
+    function renderSongOptions() {
+      const currentValue = els.scoreSongId.value;
+      if (appState.songs.length === 0) {
+        els.scoreSongId.innerHTML = '<option value="">曲がありません</option>';
+        return;
+      }
+
+      const options = appState.songs
+        .slice()
+        .sort((a, b) => a.title.localeCompare(b.title, "ja"))
+        .map((song) => {
+          return '<option value="' + escapeHtml(song.id) + '">' +
+            escapeHtml(song.title) + " / " + escapeHtml(song.artist) +
+            "</option>";
+        })
+        .join("");
+
+      els.scoreSongId.innerHTML = options;
+
+      const exists = appState.songs.some((song) => song.id === currentValue);
+      els.scoreSongId.value = exists ? currentValue : appState.songs[0].id;
+    }
+
+    function getFilteredSortedSongs() {
+      const keyword = appState.search.trim().toLowerCase();
+
+      let songs = appState.songs.filter((song) => {
+        if (!keyword) {
+          return true;
+        }
+        return (
+          song.title.toLowerCase().includes(keyword) ||
+          song.artist.toLowerCase().includes(keyword)
+        );
+      });
+
+      if (appState.sortMode === "score") {
+        songs = songs.slice().sort((a, b) => {
+          const avgA = getSongAverage(a.id);
+          const avgB = getSongAverage(b.id);
+          const scoreA = avgA === null ? -1 : avgA;
+          const scoreB = avgB === null ? -1 : avgB;
+          return scoreB - scoreA;
+        });
+      } else if (appState.sortMode === "favorite") {
+        songs = songs.slice().sort((a, b) => {
+          if (a.favorite === b.favorite) {
+            return new Date(b.createdAt) - new Date(a.createdAt);
+          }
+          return Number(b.favorite) - Number(a.favorite);
+        });
+      } else {
+        songs = songs.slice().sort((a, b) => {
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+      }
+
+      return songs;
+    }
+
+    function renderSongs() {
+      const songs = getFilteredSortedSongs();
+
+      if (songs.length === 0) {
+        els.songList.innerHTML = '<div class="empty">曲がまだありません。まずは1曲登録してみましょう。</div>';
+        return;
+      }
+
+      els.songList.innerHTML = songs.map((song) => {
+        const avg = getSongAverage(song.id);
+        const best = getSongBest(song.id);
+        const count = getScoresForSong(song.id).length;
+
+        return '' +
+          '<article class="song-card">' +
+            '<div class="song-top">' +
+              '<div>' +
+                '<h3 class="song-title">' + escapeHtml(song.title) + '</h3>' +
+                '<div class="sub">' + escapeHtml(song.artist) + '</div>' +
+              '</div>' +
+              (song.favorite ? '<div class="pill">★ お気に入り</div>' : '') +
+            '</div>' +
+            '<div class="pill-row">' +
+              '<div class="pill">キー: ' + escapeHtml(song.key === "0" ? "原曲" : song.key) + '</div>' +
+              '<div class="pill">難易度: ' + escapeHtml(song.difficulty) + '</div>' +
+              '<div class="pill">履歴: ' + count + '件</div>' +
+              '<div class="pill">平均: ' + (avg === null ? "-" : '<span class="' + scoreClass(avg) + '">' + formatScore(avg) + '</span>') + '</div>' +
+              '<div class="pill">最高: ' + (best === null ? "-" : '<span class="' + scoreClass(best) + '">' + formatScore(best) + '</span>') + '</div>' +
+            '</div>' +
+            '<div class="sub" style="margin-top: 10px;">' +
+              (song.memo ? escapeHtml(song.memo) : "メモなし") +
+            '</div>' +
+            '<div class="song-actions">' +
+              '<button type="button" class="btn-ghost" data-action="score" data-id="' + escapeHtml(song.id) + '">スコア追加</button>' +
+              '<button type="button" class="btn-ghost" data-action="toggle-fav" data-id="' + escapeHtml(song.id) + '">' +
+                (song.favorite ? 'お気に入り解除' : 'お気に入り化') +
+              '</button>' +
+              '<button type="button" class="btn-secondary" data-action="edit" data-id="' + escapeHtml(song.id) + '">編集</button>' +
+              '<button type="button" class="btn-danger" data-action="delete" data-id="' + escapeHtml(song.id) + '">削除</button>' +
+            '</div>' +
+          '</article>';
+      }).join("");
+    }
+
+    function renderHistory() {
+      const merged = appState.scores
+        .map((score) => {
+          const song = appState.songs.find((item) => item.id === score.songId);
+          return {
+            ...score,
+            songTitle: song ? song.title : "削除済みの曲",
+            artist: song ? song.artist : "-"
+          };
+        })
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      if (merged.length === 0) {
+        els.historyList.innerHTML = '<div class="empty">採点履歴はまだありません。</div>';
+        return;
+      }
+
+      els.historyList.innerHTML = merged.map((item) => {
+        const dateText = new Date(item.createdAt).toLocaleString("ja-JP");
+        return '' +
+          '<article class="history-card">' +
+            '<div class="history-top">' +
+              '<div>' +
+                '<h3 class="history-title">' + escapeHtml(item.songTitle) + '</h3>' +
+                '<div class="sub">' + escapeHtml(item.artist) + '</div>' +
+              '</div>' +
+              '<div class="pill ' + scoreClass(item.value) + '">' + formatScore(item.value) + '点</div>' +
+            '</div>' +
+            '<div class="sub" style="margin-top: 10px;">' +
+              escapeHtml(item.comment || "コメントなし") +
+            '</div>' +
+            '<div class="sub" style="margin-top: 8px;">記録日時: ' + escapeHtml(dateText) + '</div>' +
+            '<div class="history-actions">' +
+              '<button type="button" class="btn-danger" data-action="delete-score" data-id="' + escapeHtml(item.id) + '">この履歴を削除</button>' +
+            '</div>' +
+          '</article>';
+      }).join("");
+    }
+
+    function renderSetlist() {
+      if (appState.setlist.length === 0) {
+        els.setlistArea.innerHTML = '<div class="empty">まだセットリストがありません。</div>';
+        return;
+      }
+
+      els.setlistArea.innerHTML = appState.setlist.map((song, index) => {
+        const avg = getSongAverage(song.id);
+        return '' +
+          '<article class="song-card">' +
+            '<div class="song-top">' +
+              '<div>' +
+                '<h3 class="song-title">' + (index + 1) + '. ' + escapeHtml(song.title) + '</h3>' +
+                '<div class="sub">' + escapeHtml(song.artist) + '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="pill-row">' +
+              '<div class="pill">キー: ' + escapeHtml(song.key === "0" ? "原曲" : song.key) + '</div>' +
+              '<div class="pill">難易度: ' + escapeHtml(song.difficulty) + '</div>' +
+              '<div class="pill">平均: ' + (avg === null ? "-" : formatScore(avg)) + '</div>' +
+            '</div>' +
+          '</article>';
+      }).join("");
+    }
+
+    function renderAll() {
+      updateDashboard();
+      renderSongOptions();
+      renderSongs();
+      renderHistory();
+      renderSetlist();
+    }
+
+    function resetSongForm() {
+      editingSongId = null;
+      els.songForm.reset();
+      els.key.value = "0";
+      els.difficulty.value = "ふつう";
+      els.favorite.value = "false";
+      els.submitSongButton.textContent = "曲を追加";
+    }
+
+    function resetScoreForm() {
+      els.scoreForm.reset();
+      renderSongOptions();
+    }
+
+    function upsertSong(formData) {
+      const payload = {
+        title: formData.get("title").trim(),
+        artist: formData.get("artist").trim(),
+        key: formData.get("key"),
+        difficulty: formData.get("difficulty"),
+        favorite: formData.get("favorite") === "true",
+        memo: formData.get("memo").trim()
+      };
+
+      if (!payload.title || !payload.artist) {
+        alert("曲名とアーティストは必須です。");
+        return;
+      }
+
+      if (editingSongId) {
+        const target = appState.songs.find((song) => song.id === editingSongId);
+        if (!target) {
+          alert("編集中の曲が見つかりません。");
+          resetSongForm();
+          return;
+        }
+
+        target.title = payload.title;
+        target.artist = payload.artist;
+        target.key = payload.key;
+        target.difficulty = payload.difficulty;
+        target.favorite = payload.favorite;
+        target.memo = payload.memo;
+      } else {
+        appState.songs.unshift({
+          id: createId("song"),
+          ...payload,
+          createdAt: new Date().toISOString()
+        });
+      }
+
+      saveState();
+      renderAll();
+      resetSongForm();
+    }
+
+    function addScore(songId, scoreValue, comment) {
+      const song = appState.songs.find((item) => item.id === songId);
+      if (!song) {
+        alert("対象曲が見つかりません。");
+        return false;
+      }
+
+      const value = Number(scoreValue);
+      if (Number.isNaN(value) || value < 0 || value > 100) {
+        alert("点数は0〜100で入力してください。");
+        return false;
+      }
+
+      appState.scores.unshift({
+        id: createId("score"),
+        songId,
+        value,
+        comment: String(comment || "").trim(),
+        createdAt: new Date().toISOString()
+      });
+
+      saveState();
+      renderAll();
+      return true;
+    }
+
+    function shuffle(array) {
+      const copy = array.slice();
+      for (let i = copy.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function generateSetlist() {
+      if (appState.songs.length === 0) {
+        alert("先に曲を登録してください。");
+        return;
+      }
+
+      const count = Number(els.setlistCount.value);
+      const mode = els.setlistMode.value;
+      let pool = appState.songs.slice();
+
+      if (mode === "favorite") {
+        const favorites = pool.filter((song) => song.favorite);
+        const others = pool.filter((song) => !song.favorite);
+        pool = [...shuffle(favorites), ...shuffle(others)];
+      } else if (mode === "score") {
+        pool = pool
+          .slice()
+          .sort((a, b) => {
+            const avgA = getSongAverage(a.id);
+            const avgB = getSongAverage(b.id);
+            const valA = avgA === null ? -1 : avgA;
+            const valB = avgB === null ? -1 : avgB;
+            return valA - valB;
+          });
+      } else {
+        pool = shuffle(pool);
+      }
+
+      appState.setlist = pool.slice(0, Math.min(count, pool.length));
+      saveState();
+      renderSetlist();
+    }
+
+    function editSong(songId) {
+      const song = appState.songs.find((item) => item.id === songId);
+      if (!song) {
+        alert("曲が見つかりません。");
+        return;
+      }
+
+      editingSongId = song.id;
+      els.title.value = song.title;
+      els.artist.value = song.artist;
+      els.key.value = song.key;
+      els.difficulty.value = song.difficulty;
+      els.favorite.value = String(song.favorite);
+      els.memo.value = song.memo || "";
+      els.submitSongButton.textContent = "曲を更新";
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    }
+
+    function deleteSong(songId) {
+      const song = appState.songs.find((item) => item.id === songId);
+      if (!song) {
+        return;
+      }
+
+      const ok = confirm("「" + song.title + "」を削除します。関連する採点履歴も削除されます。");
+      if (!ok) {
+        return;
+      }
+
+      appState.songs = appState.songs.filter((item) => item.id !== songId);
+      appState.scores = appState.scores.filter((score) => score.songId !== songId);
+      appState.setlist = appState.setlist.filter((item) => item.id !== songId);
+
+      if (editingSongId === songId) {
+        resetSongForm();
+      }
+
+      saveState();
+      renderAll();
+    }
+
+    function toggleFavorite(songId) {
+      const song = appState.songs.find((item) => item.id === songId);
+      if (!song) {
+        return;
+      }
+
+      song.favorite = !song.favorite;
+      saveState();
+      renderAll();
+    }
+
+    function deleteScore(scoreId) {
+      const exists = appState.scores.some((item) => item.id === scoreId);
+      if (!exists) {
+        return;
+      }
+
+      const ok = confirm("この採点履歴を削除しますか？");
+      if (!ok) {
+        return;
+      }
+
+      appState.scores = appState.scores.filter((item) => item.id !== scoreId);
+      saveState();
+      renderAll();
+    }
+
+    function exportData() {
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        app: "Karaoke Buddy PWA",
+        version: 1,
+        songs: appState.songs,
+        scores: appState.scores
+      };
+
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {
+        type: "application/json"
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const stamp = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = "karaoke-buddy-backup-" + stamp + ".json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      els.dataMessage.textContent = "バックアップJSONを書き出しました。";
+    }
+
+    function importData(file) {
+      const reader = new FileReader();
+
+      reader.onload = function () {
+        try {
+          const parsed = JSON.parse(String(reader.result));
+          const songs = Array.isArray(parsed.songs) ? parsed.songs : null;
+          const scores = Array.isArray(parsed.scores) ? parsed.scores : null;
+
+          if (!songs || !scores) {
+            throw new Error("JSON形式が不正です。");
+          }
+
+          const validSongIds = new Set(
+            songs
+              .filter((song) => song && typeof song.id === "string")
+              .map((song) => song.id)
+          );
+
+          const safeSongs = songs
+            .filter((song) => {
+              return song &&
+                typeof song.id === "string" &&
+                typeof song.title === "string" &&
+                typeof song.artist === "string";
+            })
+            .map((song) => {
+              return {
+                id: song.id,
+                title: song.title,
+                artist: song.artist,
+                key: typeof song.key === "string" ? song.key : "0",
+                difficulty: typeof song.difficulty === "string" ? song.difficulty : "ふつう",
+                favorite: Boolean(song.favorite),
+                memo: typeof song.memo === "string" ? song.memo : "",
+                createdAt: typeof song.createdAt === "string" ? song.createdAt : new Date().toISOString()
+              };
+            });
+
+          const safeScores = scores
+            .filter((score) => {
+              return score &&
+                typeof score.id === "string" &&
+                typeof score.songId === "string" &&
+                validSongIds.has(score.songId);
+            })
+            .map((score) => {
+              const value = Number(score.value);
+              return {
+                id: score.id,
+                songId: score.songId,
+                value: Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : 0,
+                comment: typeof score.comment === "string" ? score.comment : "",
+                createdAt: typeof score.createdAt === "string" ? score.createdAt : new Date().toISOString()
+              };
+            });
+
+          appState.songs = safeSongs;
+          appState.scores = safeScores;
+          appState.setlist = [];
+          saveState();
+          renderAll();
+          resetSongForm();
+          resetScoreForm();
+          els.dataMessage.textContent = "JSONの読み込みが完了しました。";
+        } catch (error) {
+          console.error(error);
+          alert("JSONの読み込みに失敗しました。形式を確認してください。");
+          els.dataMessage.textContent = "JSONの読み込みに失敗しました。";
+        } finally {
+          els.importInput.value = "";
+        }
+      };
+
+      reader.readAsText(file, "utf-8");
+    }
+
+    function clearAllData() {
+      const ok = confirm("すべての曲・採点履歴・セットリストを削除します。元に戻せません。");
+      if (!ok) {
+        return;
+      }
+
+      appState.songs = [];
+      appState.scores = [];
+      appState.setlist = [];
+      saveState();
+      renderAll();
+      resetSongForm();
+      resetScoreForm();
+      els.dataMessage.textContent = "全データを削除しました。";
+    }
+
+    function updateOnlineStatus() {
+      els.onlineStatus.textContent = navigator.onLine ? "通信状態: オンライン" : "通信状態: オフライン";
+    }
+
+    function setupPWAInstallPrompt() {
+      window.addEventListener("beforeinstallprompt", (event) => {
+        event.preventDefault();
+        deferredPrompt = event;
+        els.installStatus.textContent = "インストール: ブラウザの追加操作が可能です";
+      });
+
+      window.addEventListener("appinstalled", () => {
+        deferredPrompt = null;
+        els.installStatus.textContent = "インストール: 完了";
+      });
+
+      els.installStatus.addEventListener("click", async () => {
+        if (!deferredPrompt) {
+          return;
+        }
+
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+        deferredPrompt = null;
+      });
+    }
+
+    function attachEvents() {
+      els.songForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        upsertSong(new FormData(els.songForm));
+      });
+
+      els.resetSongButton.addEventListener("click", resetSongForm);
+
+      els.scoreForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const success = addScore(
+          els.scoreSongId.value,
+          els.scoreValue.value,
+          els.scoreComment.value
+        );
+        if (success) {
+          resetScoreForm();
+        }
+      });
+
+      els.resetScoreButton.addEventListener("click", resetScoreForm);
+
+      els.generateSetlistButton.addEventListener("click", generateSetlist);
+
+      els.clearSetlistButton.addEventListener("click", () => {
+        appState.setlist = [];
+        saveState();
+        renderSetlist();
+      });
+
+      els.searchInput.addEventListener("input", (event) => {
+        appState.search = event.target.value;
+        renderSongs();
+      });
+
+      els.sortNewest.addEventListener("click", () => {
+        appState.sortMode = "newest";
+        renderSongs();
+      });
+
+      els.sortScore.addEventListener("click", () => {
+        appState.sortMode = "score";
+        renderSongs();
+      });
+
+      els.sortFavorite.addEventListener("click", () => {
+        appState.sortMode = "favorite";
+        renderSongs();
+      });
+
+      els.songList.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-action]");
+        if (!button) {
+          return;
+        }
+
+        const action = button.dataset.action;
+        const id = button.dataset.id;
+
+        if (action === "score") {
+          els.scoreSongId.value = id;
+          els.scoreValue.focus();
+          return;
+        }
+
+        if (action === "toggle-fav") {
+          toggleFavorite(id);
+          return;
+        }
+
+        if (action === "edit") {
+          editSong(id);
+          return;
+        }
+
+        if (action === "delete") {
+          deleteSong(id);
+        }
+      });
+
+      els.historyList.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-action='delete-score']");
+        if (!button) {
+          return;
+        }
+        deleteScore(button.dataset.id);
+      });
+
+      els.exportButton.addEventListener("click", exportData);
+
+      els.importTriggerButton.addEventListener("click", () => {
+        els.importInput.click();
+      });
+
+      els.importInput.addEventListener("change", (event) => {
+        const file = event.target.files && event.target.files[0];
+        if (!file) {
+          return;
+        }
+        importData(file);
+      });
+
+      els.clearAllButton.addEventListener("click", clearAllData);
+
+      window.addEventListener("online", updateOnlineStatus);
+      window.addEventListener("offline", updateOnlineStatus);
+    }
+
+    async function registerServiceWorker() {
+      if (!("serviceWorker" in navigator)) {
+        return;
+      }
+
+      try {
+        await navigator.serviceWorker.register("ServiceWorker.js");
+      } catch (error) {
+        console.error("Service Worker登録失敗:", error);
+      }
+    }
+
+    function selfCheck() {
+      const hasDuplicateSongIds = new Set(appState.songs.map((song) => song.id)).size !== appState.songs.length;
+      const hasBrokenScoreRef = appState.scores.some((score) => {
+        return !appState.songs.some((song) => song.id === score.songId);
+      });
+
+      if (hasDuplicateSongIds || hasBrokenScoreRef) {
+        console.warn("自己検証で不整合を検出しました。", {
+          hasDuplicateSongIds,
+          hasBrokenScoreRef
+        });
+      } else {
+        console.info("自己検証OK: 主要データ整合性に問題はありません。");
+      }
+    }
+
+    function init() {
+      loadState();
+      attachEvents();
+      updateOnlineStatus();
+      setupPWAInstallPrompt();
+      renderAll();
+      selfCheck();
+      registerServiceWorker();
+    }
+
+    init();
+  </script>
+</body>
+</html>

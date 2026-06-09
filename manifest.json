@@ -1,0 +1,26 @@
+{
+  "name": "Karaoke Buddy PWA",
+  "short_name": "KaraokeBuddy",
+  "description": "カラオケ好き向けの曲管理・採点記録・セットリスト生成ができるオフライン対応PWA",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#111827",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "icon_192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon_512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
